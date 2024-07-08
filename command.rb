@@ -2,7 +2,7 @@ require 'open3'
 
 class Command
   def to_s
-    "/sfs/ceph/standard/rc-students/ood/quota/local_hdquota.sh"
+    "/sfs/ceph/standard/rc-students/ood/ViewMyQuota/local_hdquota.sh"
   end
 
   AppProcess = Struct.new(:type, :location, :name, :size, :used, :available, :used_percentage)

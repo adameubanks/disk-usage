@@ -2,10 +2,10 @@ require 'open3'
 
 class Command
   def to_s
-    "/sfs/ceph/standard/rc-students/ood/ViewMyQuota/local_hdquota.sh"
+    "/sfs/ceph/standard/rc-students/ood/ViewDiskUsage/local_hdquota"
   end
 
-  AppProcess = Struct.new(:type, :location, :name, :size, :used, :available, :used_percentage)
+  AppProcess = Struct.new(:type, :location, :size, :used, :available, :used_percentage)
 
   def parse(output)
     lines = output.strip.split("\n")

@@ -10,7 +10,7 @@ end
 
 helpers do
   def dashboard_title
-    "Open OnDemand"
+    "UVA Open OnDemand"
   end
 
   def dashboard_url
@@ -18,7 +18,7 @@ helpers do
   end
 
   def title
-    "Disk Quota"
+    "Disk Usage"
   end
 end
 

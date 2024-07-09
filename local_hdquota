@@ -1,0 +1,154 @@
+#! /usr/bin/python3
+
+# Report storage size and usage for Home Directory, Scratch,
+# Research Project and Research Standard.
+#
+# We get the user's group list with os.getgroups() and report
+# directories in /project and /standard whose group is in the
+# group list. If the user has a personal quota under /project/SDS,
+# then we include /project/SDS and the personal quota in the
+# report.
+#
+# To get size and usage for /standard (Ceph), we run getfattr.
+# Otherwise we call os.statvfs().
+
+import sys
+import os
+import pwd
+
+# Get size and usage with os.statvfs().
+
+def get_usage_statvfs(path):
+    st = os.statvfs(path)
+    size = st.f_bsize * st.f_blocks
+    avail = st.f_bsize * st.f_bfree
+    used = size - avail
+    # For Weka (scratch) os.statvfs() returns the
+    # hard limit of 12 TB, but we report the soft
+    # limit of 10 TB instead.
+    if (path.startswith("/scratch/") and
+        size == 12 * 2 ** 40):
+        size = 10 * 2 ** 40
+        avail -= 2 * 2 ** 40
+    return (size, used, avail)
+
+# Run getfattr to get an attribute value.
+
+def getfattr(path, attr):
+    with os.popen("/usr/bin/getfattr --only-values " + f"-n {attr} {path} 2> /dev/null", "r") as fp:
+        value = fp.read()
+        if value == "":
+            return 0
+        else:
+            return int(value)
+
+# Get Ceph size and usage with getfattr.
+
+def get_usage_getfattr(path):
+    size = getfattr(path, "ceph.quota.max_bytes")
+    used = getfattr(path, "ceph.dir.rbytes")
+    avail = size - used
+    return (size, used, avail)
+
+# Get the user's loginid.
+
+def get_loginid():
+    return pwd.getpwuid(os.getuid()).pw_name
+
+# Get the GPFS personal user quota by running mmlsquota.
+
+def gpfs_personal_quota(fileset):
+    with os.popen("/usr/lpp/mmfs/bin/mmlsquota " +
+        f"-u {get_loginid()} -Y {fileset}", "r") as fp:
+        for row in (line.split(":") for line in fp
+            if ":HEADER:" not in line):
+            used = int(row[10]) * 2 ** 10
+            size = int(row[11]) * 2 ** 10
+    return (size, used)
+
+# Yield the directories to include in the report.
+
+def get_path():
+    loginid = get_loginid()
+    for dir1, ty in (
+        ("/home", "Home Directory"),
+        ("/scratch", "Scratch")
+    ):
+        dir = os.path.join(dir1, loginid)
+        try:
+            os.stat(dir)
+        except:
+            continue
+        yield(dir, ty)
+    groupset = {gr for gr in os.getgroups() if gr > 100}
+    global SDS_personal_quota
+    SDS_personal_quota = gpfs_personal_quota("tardis:SDS")
+    for dir, ty in (
+        ("/project", "Research Project"),
+        ("/standard", "Research Standard")
+    ):
+        for ent in sorted(os.scandir(dir), key = lambda x: x.name):
+            # If the user has a SDS personal quota, then include
+            # /project/SDS in the report.
+            if ent.path == "/project/SDS":
+                size, used = SDS_personal_quota
+                if size > 0 or used > 0:
+                    yield(ent.path, ty)
+                continue
+            try:
+                st = os.stat(ent.path)
+            except:
+                continue
+            if st.st_gid in groupset:
+                yield(ent.path, ty)
+
+# Convert bytes to human readable units.
+
+def human(bytes):
+    abs_bytes = abs(bytes)
+    for unit, size in (
+        ("PB", 2 ** 50),
+        ("TB", 2 ** 40),
+        ("GB", 2 ** 30),
+        ("MB", 2 ** 20),
+        ("KB", 2 ** 10)
+    ):
+        if abs_bytes < size > 2 ** 10:
+            continue
+        return "%.1f %s" % (bytes / size, unit)
+
+# Output a report line.
+
+def output(ty, path, size, used, avail):
+    if size == 0:
+        pct = "N/A"
+    else:
+        pct = "%.0f%%" % (100.0 * used / size)
+    line = report_fmt % (ty, path, human(size), human(used),
+        human(avail), pct)
+    sys.stdout.write(line)
+
+# Generate the size and usage report.
+
+def main():
+    global report_fmt
+    report_fmt = "%-18s %-30s %10s %10s %10s %5s\n"
+    sys.stdout.write(report_fmt % ("Storage Type",
+        "Location", "Size", "Used", "Avail", "Use%"))
+    sys.stdout.write(report_fmt % ("------------",
+        "--------", "----", "----", "-----", "----"))
+    for path, ty in get_path():
+        if path.startswith("/standard/"):
+            size, used, avail = get_usage_getfattr(path)
+        else:
+            size, used, avail = get_usage_statvfs(path)
+        output(ty, path, size, used, avail)
+        if path == "/project/SDS":
+            # Also report the SDS personal quota
+            sds_size, used = SDS_personal_quota
+            if sds_size == 0:
+                sds_size = size
+            avail = sds_size - used
+            output("  Personal Quota", path, sds_size, used, avail)
+
+main()

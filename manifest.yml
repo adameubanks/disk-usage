@@ -1,2 +1,5 @@
 name: View Disk Usage
 description: Displays your quotas and disk usage
+icon: fas://chart-pie
+category: Files
+subcategory: Utilities

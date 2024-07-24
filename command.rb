@@ -2,7 +2,7 @@ require 'open3'
 
 class Command
   def to_s
-    "/sfs/ceph/standard/rc-students/ood/ViewDiskUsage/local_hdquota"
+    "/sfs/ceph/standard/rc-students/ood/DiskUsage/local_hdquota"
   end
 
   AppProcess = Struct.new(:type, :location, :size, :used, :available, :used_percentage)

@@ -1,15 +1,25 @@
 require 'open3'
 
 class Command
-  AppProcess = Struct.new(:type, :location, :size, :used, :available, :used_percentage)
+  AppProcessQuota = Struct.new(:type, :location, :size, :used, :available, :used_percentage)
+  AppProcessAlloc = Struct.new(:account, :balance, :reserved, :available)
 
   def parse(output)
     lines = output.strip.split("\n")
-    # Skip header lines
-    lines = lines.drop(2)
-    lines.map do |line|
-      fields = line.split(/\s{2,}/) # Split based on two or more spaces
-      AppProcess.new(*fields)
+    header = lines[0]
+
+    if header == "Storage Type       Location                             Size       Used      Avail  Use%"
+      # Skip header lines
+      lines = lines.drop(1)
+      lines.map do |line|
+        fields = line.split(/\s{2,}/) # Split based on two or more spaces
+        AppProcessQuota.new(*fields)
+      end
+    else
+      lines.map do |line|
+        fields = line.split(/\s{2,}/) # Split based on two or more spaces
+        AppProcessAlloc.new(*fields)
+      end
     end
   end
 

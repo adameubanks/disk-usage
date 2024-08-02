@@ -1,7 +1,7 @@
 ![UVA Research Computing Logo](https://learning.rc.virginia.edu/img/RC_logo.svg)
-# UVA Disk Usage App
+# UVA Resource Manager App for Open OnDemand
 
-This is a Sinatra application that displays disk usage for Open OnDemand at the University of Virginia, using Passenger as the application server.
+This is a Sinatra application that displays disk usage and allocations for Open OnDemand at the University of Virginia, using Passenger as the application server.
 
 ## Installation and Usage
 

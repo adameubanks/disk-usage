@@ -1,0 +1,35 @@
+#!/bin/bash
+
+MAM_PATH="/opt/mam/current/bin/"
+
+case "$1" in
+"")
+  line="%-20s %15s %15s %15s %15s\n"
+  printf "$line" "Account" "Balance" "Reserved" "Available"
+  printf "$line" "-----------------" "---------" "---------" "---------"
+  array=()
+
+  for ACCOUNT in $($MAM_PATH/mam-list-accounts -A --quiet --show Name);do 
+        read -r Allocated Remaining <<< $($MAM_PATH/mam-list-allocations -a $ACCOUNT -A --quiet --show Allocated,Remaining|awk '{ sum += $1; sum2 += $2 } END { print sum, sum2}')
+        Reserved="0"
+        if [[ -z $Remaining ]];then 
+                Allocated=0;Remaining=0;array+=($ACCOUNT)
+        else
+                printf "$line" "$ACCOUNT" "$Allocated" "$Reserved" "$Remaining"
+        fi
+  done
+  ;;
+-a)
+  $MAM_PATH/mam-list-allocations -a $2 --show Description,StartTime,EndTime,Allocated,Remaining,PercentUsed,Active
+  printf "\n"
+  $MAM_PATH/mam-list-users -a $2 --show Name,Active,CommonName,EmailAddress,DefaultAccount
+  printf "PI: $(mam-list-accounts -a $2 --show Users | sed -n '3p'| cut -d '^' -f2 | cut -d ',' -f1)\n"
+  ;;
+-u)
+ echo "FundName      Active Description StartTime           EndTime    Allocated  Remaining"
+ echo "------------------------------------------------------------------------------------"
+ sudo $MAM_PATH/mam-list-allocations -u $2 --quiet --show FundName,Active,Description,StartTime,EndTime,Allocated,Remaining | sort -r | awk '!seen[$1]++'
+ ;;
+*)
+  ;;
+esac

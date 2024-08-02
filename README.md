@@ -7,7 +7,7 @@ This is a Sinatra application that displays disk usage for Open OnDemand at the 
 
 1. Create a new Sandbox app
 
-2. Insert the repository link and name the app `DiskUsage`
+2. Insert the repository link and name the app `ResourceManager`
 
 3. Open the app to get a real-time display of storage use
 

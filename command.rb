@@ -1,10 +1,6 @@
 require 'open3'
 
 class Command
-  def to_s
-    "/sfs/ceph/standard/rc-students/ood/DiskUsage/local_hdquota"
-  end
-
   AppProcess = Struct.new(:type, :location, :size, :used, :available, :used_percentage)
 
   def parse(output)
@@ -17,10 +13,10 @@ class Command
     end
   end
 
-  def exec
+  def exec(command)
     processes, error = [], nil
 
-    Open3.popen3(to_s) do |stdin, stdout, stderr, wait_thr|
+    Open3.popen3(command) do |stdin, stdout, stderr, wait_thr|
       output = ""
       error_output = ""
 
@@ -38,7 +34,7 @@ class Command
       if exit_status.success?
         processes = parse(output)
       else
-        error = "Command '#{to_s}' exited with error: #{error_output}"
+        error = "Command '#{command}' exited with error: #{error_output}"
       end
     end
 

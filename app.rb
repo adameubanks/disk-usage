@@ -11,7 +11,8 @@ end
 # Define a route at the root '/' of the app.
 get '/' do
   @command = Command.new
-  @processes, @error = @command.exec
+  @quotas, @error = @command.exec("/sfs/ceph/standard/rc-students/ood/ResourceManager/local_hdquota")
+  @allocations, @error = @command.exec("/sfs/ceph/standard/rc-students/ood/ResourceManager/local_allocations")
 
   # Render the view
   erb :index

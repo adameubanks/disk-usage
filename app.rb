@@ -12,7 +12,7 @@ end
 get '/' do
   @command = Command.new
   @quotas, @error = @command.exec("/sfs/ceph/standard/rc-students/ood/ResourceManager/local_hdquota")
-  @allocations, @error = @command.exec("/sfs/ceph/standard/rc-students/ood/ResourceManager/local_allocations")
+  # @allocations, @error = @command.exec("/sfs/ceph/standard/rc-students/ood/ResourceManager/local_allocations")
 
   # Render the view
   erb :index

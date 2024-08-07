@@ -1,4 +1,5 @@
 require 'erubi'
+require 'sinatra'
 require './command'
 
 set :erb, :escape_html => true
@@ -11,7 +12,7 @@ end
 # Define a route at the root '/' of the app.
 get '/' do
   @command = Command.new
-  @quotas, @error = @command.exec("/sfs/ceph/standard/rc-students/ood/ResourceManager/local_hdquota")
+  @quotas, @error = @command.exec("/sfs/ceph/standard/rc-students/ood/DiskUsage/local_hdquota")
   # @allocations, @error = @command.exec("/sfs/ceph/standard/rc-students/ood/ResourceManager/local_allocations")
 
   # Render the view

@@ -10,7 +10,7 @@ class Command
 
     if header == "Storage Type       Location                             Size       Used      Avail  Use%"
       # Skip header lines
-      lines = lines.drop(1)
+      lines = lines.drop(2)
       lines.map do |line|
         fields = line.split(/\s{2,}/) # Split based on two or more spaces
         AppProcessQuota.new(*fields)
